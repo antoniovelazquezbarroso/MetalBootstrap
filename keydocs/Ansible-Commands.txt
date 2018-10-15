@@ -1,0 +1,25 @@
+Ansible-Commands
+
+$ ansible ubuntu1 -i hosts -m ping
+
+ubuntumetal | SUCCESS => {
+    "changed": false, 
+    "ping": "pong"
+}
+
+$ ansible ubuntu1 -i hosts -a "free -m"
+
+ubuntumetal | SUCCESS | rc=0 >>
+              total        used        free      shared  buff/cache   available
+Memoria:        5839          72        5292           8         473        5521
+Swap:          6013           0        6013
+
+
+To Run Playbook metal_bootstrap.yml before exchanging SSH key
+
+$ ansible-playbook --ask-become-pass metal_bootstrap.yml
+
+To Run railsapp configure.yml over metal inventory
+
+$ ansible-playbook playbooks/configure.yml -i inventories/metal/inventory --ask-become-pass
+

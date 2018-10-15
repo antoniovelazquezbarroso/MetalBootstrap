@@ -1,0 +1,57 @@
+---
+# PLAYBOOK OVERVIEW (pending)
+#
+#
+
+- hosts: ubuntu1        # you need to first configure your inventory file (hosts)
+  become: true          # you need sudo with root user to use apt-get
+  gather_facts: False   # will fail unless you do this, because initially there is no python 2
+
+  tasks:
+  - name: Wait for SSH server to be running
+    local_action: wait_for host={{ ansible_ssh_host }} state=started port=22 delay=5 timeout=300 connect_timeout=15
+ 
+# Install python2 if missing (but check first so no expensive repeated apt updates)
+# See "Get Ansible to work on bare Ubuntu 16.04 without python 2.7"
+# At "https://gist.github.com/gwillem/4ba393dceb55e5ae276a87300f6b8e6f"
+  - name: Install python 2
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    register: output
+    changed_when:
+    - output.stdout != ""
+    - output.stdout != "\r\n"
+
+  - name: Gathering Facts   # You need gather_facts for later modules
+    setup:                  # aka gather_facts
+
+# See the first of the Examples of Ansible's authorized_key module
+# At "http://docs.ansible.com/ansible/authorized_key_module.html"
+# This is same as executing $ ssh-copy-id -i .ssh/id_rsa.pub antonio@192.168.1.30
+# from the Development machine (the one running ansible)
+# Before running ssh-copy-id you need a key-pair on the Development machine,
+# that you can create from there with $ ssh-keygen -t rsa
+  - name: Set authorized key from file
+    authorized_key:
+      user: antonio
+      state: present
+      key: "{{ lookup('file', '/Users/antonio/.ssh/id_rsa.pub') }}" #  Mac
+#      key: "{{ lookup('file', '/home/antonio/.ssh/id_rsa.pub') }}" #  Ubuntu
+
+  - name: Update APT package cache
+    apt: update_cache=yes cache_valid_time=3600
+
+  - name: Upgrade APT to the lastest packages
+    apt: upgrade=dist
+
+# See https://superuser.com/questions/1106349/cant-make-ansible-to-wait-for-a-server-to-reboot-and-continue-playbook-to-work
+  - name: Restart server
+    shell: sleep 2 && shutdown -r now "Ansible upgrade triggered"
+    async: 1
+    poll: 0
+    become: yes
+    become_method: sudo
+    ignore_errors: true
+    changed_when: False    # To ensure idempotence
+
+  - name: Waiting for server to come back after reboot
+    local_action: wait_for host={{ ansible_ssh_host }} state=started port=22 delay=30 timeout=300 connect_timeout=15

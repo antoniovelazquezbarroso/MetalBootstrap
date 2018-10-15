@@ -1,0 +1,6 @@
+ubuntu1 ansible_ssh_host=192.168.1.30 ansible_ssh_port=22 ansible_ssh_user=antonio ansible_ssh_pass=Antonio1
+
+ubuntu1604 ansible_ssh_host=192.168.1.32 ansible_ssh_port=22 ansible_ssh_user=antonio ansible_ssh_pass=Antonio1
+
+ubuntu2 ansible_ssh_host=192.168.1.25 ansible_ssh_port=22 ansible_ssh_user=antonio ansible_ssh_pass=Antonio1
+

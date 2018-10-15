@@ -1,0 +1,19 @@
+---
+- hosts: ubuntu1604     # you need to first configure your inventory file (hosts)
+  become: true          # you need sudo
+
+  tasks:
+  - name: package update (apt)
+    apt: update_cache=yes cache_valid_time=3600
+
+  - name: Install nginx 
+    action: apt pkg=nginx state=present
+
+  - name: Copy nginx config file to /etc/nginx/nginx.conf
+    copy: src=files/nginx.conf dest=/etc/nginx/nginx.conf
+
+  - name: Copy nginx specific welcome page to be shown at default site
+    copy: src=files/welcome_page.html dest=/var/www/html/index.nginx-debian.html
+
+  - name: Restart nginx
+    service: name=nginx state=restarted
